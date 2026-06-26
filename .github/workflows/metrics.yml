@@ -1,0 +1,48 @@
+name: Global Tech Stack Metrics
+on:
+  schedule: [{cron: "0 18 * * *"}] # 每天北京时间凌晨 2 点自动运行
+  workflow_dispatch:              # 支持在 Actions 界面手动点击按钮立即触发
+  push: {branches: ["master", "main"]}
+
+jobs:
+  github-metrics:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Generate Deep Architecture Metrics
+        uses: lowlighter/metrics@latest
+        with:
+          # 安全调用刚刚配置的 Secret
+          token: ${{ secrets.METRICS_TOKEN }}
+          
+          # 输出文件名与提交分支
+          filename: github-metrics.svg
+          output_action: commit
+          committer_branch: main
+          committer_message: "chore: update advanced github metrics assets [skip ci]"
+          
+          # 基础设置与时区
+          base: header, activity, community, repositories, metadata
+          config_timezone: Asia/Shanghai
+          
+          # 仓库范围：覆盖你作为 owner 的全量公开与私有仓库
+          repositories_batch: 100
+          repositories_limit: 300
+          repositories_affiliations: owner
+          repositories_fork: false # 排除 fork 别人的项目，保证自身技术栈纯洁度
+          
+          # 【核心：多仓库语言与技术栈深度解构】
+          plugin_languages: yes
+          plugin_languages_indepth: yes           # 开启高阶分析，深入扫描 go.mod, Cargo.toml 等依赖文件
+          plugin_languages_details: bytes-size, percentage
+          plugin_languages_sections: most-used
+          plugin_languages_limit: 10              # 拓宽展示语言上限
+          plugin_languages_ignored: html, css, tex # 过滤掉非核心逻辑的干扰语言
+          
+          # 【附加：开发习惯分析】
+          plugin_habits: yes
+          plugin_habits_from: 200
+          plugin_habits_days: 14
+          plugin_habits_facts: yes
+          plugin_habits_charts: yes
